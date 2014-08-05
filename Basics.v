@@ -269,8 +269,8 @@ Theorem mult_S_1 :
     m = S n -> m * (1 + n) = m * m.
 Proof.
   intros n m.
-  rewrite -> plus_1_l.
   intros H.
+  rewrite -> plus_1_l.
   rewrite -> H.
   reflexivity.
 Qed.
