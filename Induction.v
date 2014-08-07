@@ -218,3 +218,177 @@ Proof.
   rewrite -> H.
   reflexivity.
 Qed.
+
+Theorem plus_swap:
+  forall n m p : nat,
+    n + (m + p) = m + (n + p).
+Proof.
+  intros n m p.
+  rewrite -> plus_assoc.
+  rewrite -> plus_assoc.
+  assert (H: n + m = m + n).
+  Case "Proof of assertion".
+  rewrite -> plus_comm.
+  reflexivity.
+  rewrite -> H.
+  reflexivity.
+Qed.
+
+Theorem plus_elim:
+  forall m n : nat,
+    n + n * m = n * S m.
+Proof.
+  intros m n.
+  induction n as [| n'].
+  reflexivity.
+  simpl.
+  rewrite -> plus_swap.
+  rewrite -> IHn'.
+  reflexivity.
+Qed.
+
+Theorem mult_comm:
+  forall m n : nat,
+    m * n = n * m.
+Proof.
+  intros m n.
+  induction m as [| m'].
+  Case "m = O".
+    simpl.
+    rewrite -> mult_O_r.
+    reflexivity.
+  Case "m = S m'".
+    simpl.
+    rewrite -> IHm'.
+    rewrite -> plus_elim.
+    reflexivity.
+Qed.
+
+Theorem evenb_n__oddb_Sn:
+  forall n : nat,
+    evenb n = negb (evenb (S n)).
+Proof.
+  intros n.
+  induction n as [| n'].
+  Case "n = O".
+    simpl. reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite -> IHn'.
+    rewrite -> negb_involutive.
+    destruct n'.
+    simpl. reflexivity.
+    simpl. reflexivity.
+Qed.
+
+Theorem ble_nat_refl:
+  forall n : nat,
+    true = ble_nat n n.
+Proof.
+  intros n.
+  induction n as [| n'].
+  Case "n = O".
+  simpl. reflexivity.
+  Case "n = S n'".
+  simpl.
+  rewrite -> IHn'.
+  reflexivity.
+Qed.
+
+Theorem zero_nbeq_S:
+  forall n : nat,
+    beq_nat O (S n) = false.
+Proof.
+  intros n.
+  simpl. reflexivity.
+Qed.
+
+Theorem andb_false_r:
+  forall b : bool,
+    andb b false = false.
+Proof.
+  intros b.
+  destruct b.
+  Case "b = true".
+  simpl. reflexivity.
+  Case "b = false".
+  simpl. reflexivity.
+Qed.
+
+Theorem plus_ble_compat_l:
+  forall n m p : nat,
+    ble_nat n m = true -> ble_nat (p + n) (p + m) = true.
+Proof.
+  intros n m p.
+  intros H.
+  induction p as [| p'].
+  Case "p = O".
+  simpl.
+  rewrite -> H.
+  reflexivity.
+  Case "p = S p'".
+  simpl.
+  rewrite -> IHp'.
+  reflexivity.
+Qed.
+
+Theorem S_nbeq_O:
+  forall n : nat,
+    beq_nat (S n) O = false.
+Proof.
+  intros n.
+  simpl. reflexivity.
+Qed.
+
+Theorem mult_1_l:
+  forall n : nat,
+    1 * n = n.
+Proof.
+  intros n.
+  simpl.
+  rewrite -> plus_O_r.
+  reflexivity.
+Qed.
+
+Theorem all3_spec:
+  forall b c : bool,
+    orb
+      (andb b c)
+      (orb
+         (negb b)
+         (negb c))
+      = true.
+Proof.
+  intros b c.
+  destruct b as [| b].
+  Case "b = true".
+  simpl.
+  destruct c as [| c].
+  simpl. reflexivity.
+  simpl. reflexivity.
+  Case "b = false".
+  simpl. reflexivity.
+Qed.
+
+Theorem mult_plus_distr_r:
+  forall n m p : nat,
+    (n + m) * p = (n * p) + (m * p).
+Proof.
+  intros n m p.
+  induction p as [| p'].
+  Case "p = O".
+  rewrite -> mult_O_r.
+  rewrite -> mult_O_r.
+  simpl.
+  rewrite -> mult_O_r.
+  reflexivity.
+  Case "p = S p'".
+  rewrite <- plus_elim.
+  rewrite -> IHp'.
+  assert (H: n * S p' = n + n * p').
+  rewrite <- plus_elim. reflexivity.
+  rewrite -> H.
+  assert (H': m * S p' = m + m * p').
+  rewrite <- plus_elim. reflexivity.
+  rewrite -> H'.
+Abort.
