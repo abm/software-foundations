@@ -426,3 +426,54 @@ Module NatList.
     reflexivity.
     Case "l = cons".
     simpl.
+    rewrite -> snoc_rev.
+    rewrite -> IHl'.
+    reflexivity.
+  Qed.
+
+  Theorem rev_inj_l:
+    forall l1 l2 : natlist,
+      l1 = l2 -> rev l1 = rev l2.
+  Proof.
+    intros l1 l2.
+    intros H.
+    rewrite -> H.
+    reflexivity.
+  Qed.
+
+  Theorem rev_nil:
+    forall l : natlist,
+      rev l = [] -> l = [].
+  Proof.
+    intros l.
+    induction l as [| n l'].
+    simpl. reflexivity.
+    simpl.
+    assert (H: snoc (rev l') n = [] -> n :: l' = []).
+  Abort.
+       
+  Theorem rev_inj:
+    forall l1 l2 : natlist,
+      rev l1 = rev l2 -> l1 = l2.
+  Proof.
+    intros l1 l2.
+    intros H.
+    rewrite <- rev_involutive.
+    rewrite <- H.
+    rewrite -> rev_involutive.
+    reflexivity.
+  Qed.
+
+  Fixpoint index_bad (n : nat) (l : natlist) : nat :=
+    match l with
+      | nil => 42
+      | a :: l' =>
+        match beq_nat n 0 with
+          | true => a
+          | false => index_bad (pred n) l'
+        end
+    end.
+
+  Inductive natoption : Type :=
+    | Some : nat -> natoption
+    | None : natoption.
