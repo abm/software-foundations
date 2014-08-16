@@ -219,6 +219,16 @@ Proof.
   reflexivity.
 Qed.
 
+Theorem beq_nat_refl:
+  forall n : nat,
+    true = beq_nat n n.
+Proof.
+  intros n.
+  induction n as [| n].
+  simpl. reflexivity.
+  simpl. rewrite -> IHn. reflexivity.
+Qed.
+
 Theorem plus_swap:
   forall n m p : nat,
     n + (m + p) = m + (n + p).
