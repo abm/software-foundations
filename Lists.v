@@ -477,3 +477,110 @@ Module NatList.
   Inductive natoption : Type :=
     | Some : nat -> natoption
     | None : natoption.
+
+  Fixpoint index (n : nat) (l : natlist) : natoption :=
+    match l with
+      | nil => None
+      | a :: l' =>
+        match beq_nat n O with
+          | true => Some a
+          | false => index (pred n) l'
+        end
+    end.
+
+  Example test_index1: index 0 [4;5;6;7] = Some 4.
+  Proof. reflexivity. Qed.
+  Example test_index2: index 3 [4;5;6;7] = Some 7.
+  Proof. reflexivity. Qed.
+  Example test_index3: index 10 [4;5;6;7] = None.
+  Proof. reflexivity. Qed.
+
+  Fixpoint index' (n : nat) (l : natlist) : natoption :=
+    match l with
+      | nil => None
+      | a :: l' => if beq_nat n O then Some a else index' (pred n) l'
+    end.
+
+  Definition option_elim (d : nat) (o : natoption) : nat :=
+    match o with
+      | Some n' => n'
+      | None => d
+    end.
+
+  Definition hd_opt (l : natlist) : natoption :=
+    match l with
+      | nil => None
+      | h :: t => Some h
+    end.
+
+  Example test_hd_opt1: hd_opt [] = None.
+  Proof. reflexivity. Qed.
+  Example test_hd_opt2: hd_opt [1] = Some 1.
+  Proof. reflexivity. Qed.
+  Example test_hd_opt3: hd_opt [5;6] = Some 5.
+  Proof. reflexivity. Qed.
+
+  Theorem option_elim_hd:
+    forall l : natlist, forall default : nat,
+      hd default l = option_elim default (hd_opt l).
+  Proof.
+    intros l default.
+    induction l as [| n l'].
+    Case "l = nil".
+    simpl. reflexivity.
+    Case "l = cons".
+    simpl. reflexivity.
+  Qed.
+
+  Module Dictionary.
+
+    Inductive dictionary : Type :=
+      | empty : dictionary
+      | record : nat -> nat -> dictionary -> dictionary.
+
+    Definition insert (key value : nat) (d : dictionary) : dictionary :=
+      (record key value d).
+
+    Fixpoint find (key : nat) (d : dictionary) : natoption :=
+      match d with
+        | empty => None
+        | record k v d' =>
+          if (beq_nat key k)
+          then (Some v)
+          else (find key d')
+      end.
+
+    Theorem beq_nat_eq:
+      forall n : nat,
+        beq_nat n n = true.
+    Proof.
+      intros n.
+      induction n as [| n'].
+      simpl. reflexivity.
+      simpl. rewrite -> IHn'. reflexivity.
+    Qed.
+
+    Theorem dictionary_invariant1':
+      forall d : dictionary, forall k v : nat,
+        (find k (insert k v d)) = Some v.
+    Proof.
+      intros d k v.
+      simpl.
+      rewrite -> beq_nat_eq.
+      reflexivity.
+    Qed.
+
+    Theorem dictionary_invariant2':
+      forall d : dictionary, forall m n o : nat,
+        beq_nat m n = false -> find m d = find m (insert n o d).
+    Proof.
+      intros d m n o.
+      intros H.
+      simpl.
+      rewrite -> H.
+      reflexivity.
+    Qed.
+
+  End Dictionary.
+
+End NatList.
