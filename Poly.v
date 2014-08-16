@@ -258,3 +258,272 @@ Proof.
   intros X Y Z f x y.
   reflexivity.
 Qed.
+
+Theorem curry_uncurry:
+  forall (X Y Z : Type) (f : (X * Y) -> Z) (p : X * Y),
+    prod_uncurry (prod_curry f) p = f p.
+Proof.
+  intros X Y Z f p.
+  destruct p.
+  reflexivity.
+Qed.
+
+Fixpoint filter {X : Type} (test : X -> bool) (l : list X) : list X :=
+  match l with
+    | [] => []
+    | cons h t => if test h then h :: (filter test t) else (filter test t)
+  end.
+
+Example test_filter1: filter evenb [1;2;3;4] = [2;4].
+Proof. reflexivity. Qed.
+
+Definition length_is_1 {X : Type} (l : list X) : bool :=
+  beq_nat (length l) 1.
+
+Example test_filter2:
+  filter length_is_1 [[1;2]; [3]; [4]; [5;6;7]; []; [8]] =
+  [[3]; [4]; [8]].
+Proof. reflexivity. Qed.
+
+Definition countoddmembers' (l : list nat) : nat :=
+  length (filter oddb l).
+Example test_countoddmembers'1: countoddmembers' [1;0;3;1;4;5] = 4.
+Proof. reflexivity. Qed.
+Example test_countoddmembers'2: countoddmembers' [0;2;4] = 0.
+Proof. reflexivity. Qed.
+Example test_countoddmembers'3: countoddmembers' nil = 0.
+Proof. reflexivity. Qed.
+
+Example test_anon_fun':
+  doit3times (fun n => n * n) 2 = 256.
+Proof. reflexivity. Qed.
+
+Example test_filter2':
+  filter (fun l => beq_nat (length l) 1)
+         [[1;2]; [3]; [4]; [5;6;7]; []; [8]]
+         = [[3]; [4]; [8]].
+Proof. reflexivity. Qed.
+
+Definition filter_even_gt7 (l : list nat) : list nat :=
+  filter evenb (filter (fun n => ble_nat 7 n) l).
+Example test_filter_even_gt7_1 :
+  filter_even_gt7 [1;2;6;9;10;3;12;8] = [10;12;8].
+Proof. reflexivity. Qed.
+Example test_filter_even_gt7_2 :
+  filter_even_gt7 [5;2;6;19;129] = [].
+Proof. reflexivity. Qed.
+
+Definition partition {X : Type} (test : X -> bool) (l : list X) : list X * list X :=
+  ((filter test l), (filter (fun x => negb (test x)) l)).
+Example test_partition1: partition oddb [1;2;3;4;5] = ([1;3;5], [2;4]).
+Proof. reflexivity. Qed.
+Example test_partition2: partition (fun x => false) [5;9;0] = ([], [5;9;0]).
+Proof. reflexivity. Qed.
+
+Fixpoint map {X Y : Type} (f : X -> Y) (l : list X) : (list Y) :=
+  match l with
+    | [] => []
+    | h :: t => (f h) :: (map f t)
+  end.
+
+Example test_map1: map (plus 3) [2;0;2] = [5;3;5].
+Proof. reflexivity. Qed.
+
+Example test_map2: map oddb [2;1;2;5] = [false;true;false;true].
+Proof. reflexivity. Qed.
+
+Example test_map3: map (fun n => [evenb n; oddb n]) [2;1;2;5] =
+                   [[true;false];[false;true];[true;false];[false;true]].
+Proof. reflexivity. Qed.
+
+(* map f (snoc (rev l') n) = snoc (rev (map f l')) (f n) *)
+(*Theorem map_snoc:
+  forall (X Y : Type) (f : X -> Y) (l : list X),*)
+
+Theorem map_cons:
+  forall (X Y : Type) (f : X -> Y) (n : X) (l : list X),
+    map f (n::l) = (f n) :: map f l.
+Proof.
+  intros X Y f n l.
+  simpl. reflexivity.
+Qed.
+
+Theorem map_snoc:
+  forall (X Y : Type) (f : X -> Y) (n : X) (l : list X),
+   snoc (map f l) (f n) = map f (snoc l n).
+Proof.
+  intros X Y f n l.
+  induction l as [| n' l'].
+  Case "l = nil".
+  simpl. reflexivity.
+  Case "l = cons".
+  simpl.
+  rewrite -> IHl'.
+  reflexivity.
+Qed.
+  
+Theorem map_rev:
+  forall (X Y : Type) (f : X -> Y) (l : list X),
+    map f (rev l) = rev (map f l).
+Proof.
+  intros X Y f l.
+  induction l as [| n l'].
+  Case "l = nil".
+  simpl. reflexivity.
+  Case "l = cons".
+  simpl.
+  rewrite <- map_snoc.
+  rewrite -> IHl'.
+  reflexivity.
+Qed.
+
+Fixpoint flat_map {X Y : Type} (f : X -> list Y) (l : list X) : (list Y) :=
+  match l with
+    | [] => []
+    | h :: t => (f h) ++ flat_map f t
+  end.
+
+Example test_flat_map1:
+  flat_map (fun n => [n;n;n]) [1;5;4] = [1; 1; 1; 5; 5; 5; 4; 4; 4].
+Proof. reflexivity. Qed.
+
+Definition option_map {X Y : Type} (f : X -> Y) (xo : option X) : (option Y) :=
+  match xo with
+    | None => None
+    | Some x => Some (f x) 
+  end.
+
+Fixpoint fold {X Y : Type} (f : X -> Y -> Y) (l : list X) (b : Y) : Y :=
+  match l with
+    | [] => b
+    | h :: t => f h (fold f t b)
+  end.
+
+Check (fold andb).
+
+Example fold_example1 : fold mult [1;2;3;4] 1 = 24.
+Proof. reflexivity. Qed.
+
+Example fold_example2 : fold andb [true;true;false;true] true = false.
+Proof. reflexivity. Qed.
+
+Example fold_example3 : fold app [[1];[];[2;3];[4]] [] = [1;2;3;4].
+Proof. reflexivity. Qed.
+
+Definition constfun {X : Type} (x : X) : nat -> X :=
+  fun (k : nat) => x.
+Definition ftrue := constfun true.
+
+Example constfun_example1 : ftrue 0 = true.
+Proof. reflexivity. Qed.
+Example constfun_example2 : (constfun 5) 99 = 5.
+Proof. reflexivity. Qed.
+
+Definition override {X : Type} (f : nat -> X) (k : nat) (x : X) : nat -> X :=
+  fun (k' : nat) => if beq_nat k k' then x else f k'.
+
+Definition fmostlytrue := override (override ftrue 1 false) 3 false.
+
+Example override_example1 : fmostlytrue 0 = true.
+Proof. reflexivity. Qed.
+
+Example override_example2 : fmostlytrue 1 = false.
+Proof. reflexivity. Qed.
+
+Example override_example3 : fmostlytrue 2 = true.
+Proof. reflexivity. Qed.
+
+Example override_example4 : fmostlytrue 3 = false.
+Proof. reflexivity. Qed.
+
+Theorem override_example:
+  forall b : bool,
+    (override (constfun b) 3 true) 2 = b.
+Proof.
+  intros b.
+  reflexivity.
+Qed.
+
+Theorem unfold_example_bad:
+  forall m n,
+    3 + n = m -> plus3 n + 1 = m + 1.
+Proof.
+  intros m n H.
+Abort.
+
+Theorem unfold_example:
+  forall m n,
+    3 + n = m -> plus3 n + 1 = m + 1.
+Proof.
+  intros m n H.
+  unfold plus3.
+  rewrite -> H.
+  reflexivity.
+Qed.
+
+Theorem override_eq:
+  forall {X : Type} x k (f : nat -> X),
+    (override f k x) k = x.
+Proof.
+  intros X x k f.
+  unfold override.
+  rewrite <- beq_nat_refl.
+  reflexivity.
+Qed.
+
+Theorem override_neq:
+  forall (X : Type) x1 x2 k1 k2 (f : nat -> X),
+    f k1 = x1 -> beq_nat k2 k1 = false -> (override f k2 x2) k1 = x1.
+Proof.
+  intros X x1 x2 k1 k2 f.
+  intros H I.
+  unfold override.
+  rewrite -> I.
+  rewrite -> H.
+  reflexivity.
+Qed.
+
+Definition fold_length {X : Type} (l : list X) : nat :=
+  fold (fun _ n => S n) l 0.
+
+Example test_fold_length1 : fold_length [4;7;0] = 3.
+Proof. reflexivity. Qed.
+
+Theorem fold_length_correct:
+  forall X (l : list X),
+    fold_length l = length l.
+Proof.
+  intros X l.
+  induction l as [| n l'].
+  Case "l = nil".
+  simpl. reflexivity.
+  Case "l = cons".
+  unfold fold_length.
+  simpl.
+  rewrite <- IHl'.
+  unfold fold_length.
+  reflexivity.
+Qed.
+
+Definition fold_map {X Y:Type} (f : X -> Y) (l : list X) : list Y :=
+  fold (fun x => cons (f x)) l [].
+
+Example test_fold_map: fold_map (plus 3) [1;2;3] = [4;5;6].
+Proof. reflexivity. Qed.
+
+Theorem eq_map_fold_map:
+  forall (X Y : Type) (f : X -> Y) (l : list X),
+    map f l = fold_map f l.
+Proof.
+  intros X Y f l.
+  induction l as [| n l'].
+  Case "l = nil".
+  simpl. reflexivity.
+  Case "l = cons".
+  simpl.
+  unfold fold_map.
+  simpl.
+  rewrite -> IHl'.
+  unfold fold_map.
+  reflexivity.
+Qed.
