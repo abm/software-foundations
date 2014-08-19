@@ -594,11 +594,104 @@ Theorem combine_split:
   forall X Y (l : list (X * Y)) l1 l2,
     split l = (l1, l2) -> combine l1 l2 = l.
 Proof.
-  intros X Y l l1 l2.
-  induction l as [| v' l'].
+  intros X Y l.
+  induction l as [| [x y] l'].
   Case "l = []".
-    intros H.
+    intros l1 l2 H.
     inversion H.
     reflexivity.
   Case "l = v' :: l'".
-    intros H.
+    intros l1 l2 H.
+    simpl in H.
+    destruct (split l') as [lx ly].
+    SCase "split l' = (lx,ly)".
+      inversion H.
+      simpl.
+      rewrite -> IHl'.
+      reflexivity.
+      reflexivity.
+Qed.
+
+Definition sillyfun1 (n : nat) : bool :=
+  if beq_nat n 3 then true
+  else if beq_nat n 5 then true
+       else false.
+
+Theorem sillyfun1_odd_FAILED:
+  forall n : nat,
+    sillyfun1 n = true ->
+    oddb n = true.
+Proof.
+  intros n H.
+  unfold sillyfun1 in H.
+  destruct (beq_nat n 3).
+Abort.
+
+Theorem sillyfun1_odd:
+  forall n : nat,
+    sillyfun1 n = true ->
+    oddb n = true.
+Proof.
+  intros n eq.
+  unfold sillyfun1 in eq.
+  destruct (beq_nat n 3) eqn:Heqe3.
+    Case "e3 = true".
+      apply beq_nat_true in Heqe3.
+      rewrite -> Heqe3.
+      reflexivity.
+    Case "e3 = false".
+      destruct (beq_nat n 5) eqn:Heqe5.
+      SCase "e5 = true".
+        apply beq_nat_true in Heqe5.
+        rewrite -> Heqe5.
+        reflexivity.
+      SCase "e5 = false".
+        inversion eq.
+Qed.
+
+Theorem bool_fn_applied_thrice:
+  forall (f : bool -> bool) (b : bool),
+    f (f (f b)) = f b.
+Proof.
+  intros f b.
+  destruct (f b) eqn:H.
+  Case "f b = true".
+    destruct b.
+    SCase "b = true".
+      rewrite -> H.
+      symmetry.
+      rewrite -> H.
+      reflexivity.
+    SCase "b = false".
+      destruct (f true) eqn:H'.
+        rewrite -> H'.
+        reflexivity.
+
+        rewrite -> H.
+        reflexivity.
+  Case "f b = false".
+    destruct b.
+    SCase "b = true".
+      destruct (f false) eqn:H'.
+        symmetry.
+        rewrite -> H.
+        reflexivity.
+
+        rewrite -> H'.
+        reflexivity.
+    SCase "b = false".
+      destruct (f false) eqn:H'.
+        inversion H.
+
+        rewrite -> H'.
+        reflexivity.
+Qed.
+
+Theorem override_same:
+  forall (X : Type) x1 k1 k2 (f : nat -> X),
+    f k1 = x1 -> (override f k1 x1) k2 = f k2.
+Proof.
+  intros X x1 k1 k2 f H.
+  unfold override.
+  destruct (beq_nat k1 k2) eqn:eq.
+    
