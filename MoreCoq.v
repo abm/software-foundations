@@ -481,6 +481,20 @@ Proof.
       reflexivity.
 Qed.
 
+Theorem length_app:
+  forall (X : Type) (v : X) (l1 l2 : list X),
+    length (l1 ++ v :: l2) = S (length (l1 ++ l2)).
+Proof.
+  intros X v l1 l2.
+  induction l1 as [| v' l1'].
+  Case "l1 = []".
+    simpl. reflexivity.
+  Case "l1 = v' :: l1'".
+    simpl.
+    apply f_equal.
+    apply IHl1'.
+Qed.
+
 Theorem app_length_twice:
   forall (X : Type) (n : nat) (l : list X),
     length l = n -> length (l ++ l) = n + n.
@@ -501,6 +515,90 @@ Proof.
     SCase "n = O".
       inversion H.
     SCase "n = S n'".
-      simpl in H.
       simpl.
+      rewrite -> length_app.
       apply f_equal.
+      inversion H.
+      rewrite -> H1.
+      apply IHl' in H1.
+      rewrite -> H1.
+      rewrite -> plus_n_Sm.
+      reflexivity.
+Qed.
+
+Theorem double_induction:
+  forall (P : nat -> nat -> Prop),
+    P 0 0 ->
+    (forall m, P m 0 -> P (S m) 0) ->
+    (forall n, P 0 n -> P 0 (S n)) ->
+    (forall m n, P m n -> P (S m) (S n)) ->
+    forall m n, P m n.
+Proof.
+  intros P eq1 eq2 eq3 eq4 m.
+  induction m as [| m'].
+  Case "m = O".
+    intros n.
+    induction n as [| n'].
+    SCase "n = O".
+      apply eq1.
+    SCase "n = S n'".
+      apply eq3.
+      apply IHn'.
+  Case "m = S m'".
+    intros n.
+    induction n as [| n'].
+    SCase "n = O".
+      apply eq2.
+      apply IHm'.
+    SCase "n = S n'".
+      apply eq4.
+      apply IHm'.
+Qed.
+
+Definition sillyfun (n : nat) : bool :=
+  if beq_nat n 3 then false
+  else if beq_nat n 5 then false
+       else false.
+
+Theorem sillyfun_false:
+  forall n : nat,
+    sillyfun n = false.
+Proof.
+  intros n.
+  unfold sillyfun.
+  destruct (beq_nat n 3).
+  Case "beq_nat n 3 = true".
+    reflexivity.
+  Case "beq_nat n 3 = false".
+    destruct (beq_nat n 5).
+      SCase "beq_nat n 5 = true".
+        reflexivity.
+      SCase "beq_nat n 5 = false".
+        reflexivity.
+Qed.
+
+Theorem override_shadow:
+  forall (X : Type) x1 x2 k1 k2 (f : nat -> X),
+    (override (override f k1 x2) k1 x1) k2 = (override f k1 x1) k2.
+Proof.
+  intros X x1 x2 k1 k2 f.
+  unfold override.
+  destruct (beq_nat k1 k2).
+  Case "beq_nat k1 k2 = true".
+    reflexivity.
+  Case "beq_nat k1 k2 = false".
+    reflexivity.
+Qed.
+
+Theorem combine_split:
+  forall X Y (l : list (X * Y)) l1 l2,
+    split l = (l1, l2) -> combine l1 l2 = l.
+Proof.
+  intros X Y l l1 l2.
+  induction l as [| v' l'].
+  Case "l = []".
+    intros H.
+    inversion H.
+    reflexivity.
+  Case "l = v' :: l'".
+    intros H.
