@@ -694,4 +694,55 @@ Proof.
   intros X x1 k1 k2 f H.
   unfold override.
   destruct (beq_nat k1 k2) eqn:eq.
-    
+    apply beq_nat_true in eq.
+    rewrite eq in H.
+    rewrite -> H.
+    reflexivity.
+    reflexivity.
+Qed.
+
+Theorem beq_nat_sym:
+  forall n m : nat,
+    beq_nat n m = beq_nat m n.
+Proof.
+  intros n m.
+  destruct (beq_nat n m) eqn:H.
+  Case "beq_nat n m = true".
+    inversion H.
+    apply beq_nat_true in H.
+    rewrite -> H.
+    reflexivity.
+  Case "beq_nat n m = false".
+    destruct n.
+    SCase "n = O".
+      destruct m.
+      SSCase "m = O".
+        inversion H.
+      SSCase "m = S m".
+        simpl. reflexivity.
+    SCase "n = S n".
+      destruct m.
+      SSCase "m = O".
+        simpl. reflexivity.
+      SSCase "m = S m".
+Abort.
+
+Theorem beq_nat_sym:
+  forall n m : nat,
+    beq_nat n m = beq_nat m n.
+Proof.
+  intros n.
+  induction n as [| n'].
+  Case "n = O".
+    intros m.
+    destruct m.
+      reflexivity.
+      reflexivity.
+  Case "n = S n".
+    intros m.
+    destruct m.
+      reflexivity.
+      simpl.
+      rewrite -> IHn'.
+      reflexivity.
+Qed.
