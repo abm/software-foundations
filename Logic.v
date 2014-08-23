@@ -193,4 +193,216 @@ Theorem or_distributes_over_and_2:
   forall P Q R : Prop,
     (P \/ Q) /\ (P \/ R) -> P \/ (Q /\ R).
 Proof.
-  intros P Q R H.
+  intros P Q R.
+  intros H.
+  inversion H as [[HP1 | HQ] [HP2 | HR]].
+  left. apply HP1.
+  left. apply HP1.
+  left. apply HP2.
+  right.
+    split. apply HQ. apply HR.
+Qed.
+
+Theorem or_distributes_over_and:
+  forall P Q R : Prop,
+    P \/ (Q /\ R) <-> (P \/ Q) /\ (P \/ R).
+Proof.
+  intros P Q R.
+  split.
+    apply or_distributes_over_and_1.
+    apply or_distributes_over_and_2.
+Qed.
+
+Theorem andb_prop:
+  forall b c,
+    andb b c = true -> b = true /\ c = true.
+Proof.
+  intros b c H.
+  destruct b.
+  Case "b = true".
+    split.
+      SCase "left". reflexivity.
+      SCase "right". apply H.
+  Case "b = false".
+    split.
+      SCase "left". inversion H.
+      SCase "right". inversion H.
+Qed.
+
+Theorem andb_true_intro:
+  forall b c,
+    b = true /\ c = true -> andb b c = true.
+Proof.
+  intros b c H.
+  inversion H as [HB HC].
+  rewrite HB.
+  rewrite HC.
+  simpl.
+  reflexivity.
+Qed.
+
+Theorem andb_false:
+  forall b c,
+    andb b c = false -> b = false \/ c = false.
+Proof.
+  intros b c H.
+  destruct b.
+  Case "b = true".
+    simpl in H.
+    rewrite H.
+    right. reflexivity.
+  Case "b = false".
+    left. reflexivity.
+Qed.
+
+Theorem orb_prop:
+  forall b c,
+    orb b c = true -> b = true \/ c = true.
+Proof.
+  intros b c H.
+  destruct b.
+  Case "b = true".
+    left. reflexivity.
+  Case "b = right".
+    simpl in H.
+    rewrite H.
+    right. reflexivity.
+Qed.
+
+Theorem orb_false_elim:
+  forall b c,
+    orb b c = false -> b = false /\ c = false.
+Proof.
+  intros b c H.
+  destruct b.
+  Case "b = true".
+    simpl in H.
+    inversion H.
+  Case "b = false".
+    split.
+      reflexivity.
+      simpl in H. rewrite H. reflexivity.
+Qed.
+
+Inductive False : Prop := .
+
+Theorem False_implies_nonsense:
+  False -> 2 + 2 = 5.
+Proof.
+  intros H.
+  inversion H.
+Qed.
+
+Theorem nonsense_implies_False:
+  2 + 2 = 5 -> False.
+Proof.
+  intros H.
+  inversion H.
+Qed.
+
+Theorem ex_falso_quodlibet:
+  forall P : Prop,
+    False -> P.
+Proof.
+  intros P H.
+  inversion H.
+Qed.
+
+Definition True : Prop :=
+  forall P : Prop,
+    P -> P.
+
+Definition not (P : Prop) := P -> False.
+
+Notation "~ x" := (not x) : type_scope.
+
+Check not.
+
+Theorem not_False:
+  ~ False.
+Proof.
+  unfold not.
+  intros H.
+  inversion H.
+Qed.
+
+Theorem contradiction_implies_anything:
+  forall P Q : Prop,
+    (P /\ ~P) -> Q.
+Proof.
+  intros P Q H.
+  inversion H as [HP HNA].
+  unfold not in HNA.
+  apply HNA in HP.
+  inversion HP.
+Qed.
+
+Theorem double_neg:
+  forall P : Prop,
+    P -> ~~P.
+Proof.
+  intros P H.
+  unfold not.
+  intros I.
+  apply I in H.
+  inversion H.
+Qed.
+
+Theorem contrapositive:
+  forall P Q : Prop,
+    (P -> Q) -> (~Q -> ~P).
+Proof.
+  intros P Q H I.
+  unfold not.
+  intros J.
+  unfold not in I.
+  apply H in J.
+  apply I in J.
+  apply J.
+Qed.
+
+Theorem not_both_true_and_false:
+  forall P : Prop,
+    ~(P /\ ~P).
+Proof.
+  intros P.
+  unfold not.
+  intros H.
+  inversion H as [HP HPF].
+  apply HPF in HP.
+  apply HP.
+Qed.
+
+Print not_both_true_and_false.
+
+Theorem classic_double_neg:
+  forall P : Prop,
+    ~~P -> P.
+Proof.
+  intros P H.
+  unfold not in H.
+Abort.
+
+Definition peirce :=
+  forall P Q : Prop, 
+  ((P -> Q) -> P) -> P.
+Definition classic :=
+  forall P : Prop, 
+  ~~P -> P.
+Definition excluded_middle :=
+  forall P : Prop, 
+    P \/ ~P.
+Definition de_morgan_not_and_not :=
+  forall P Q : Prop, 
+  ~(~P /\ ~Q) -> P \/ Q.
+Definition implies_to_or :=
+  forall P Q : Prop, 
+  (P -> Q) -> (~P \/ Q).
+
+Theorem excluded_middle_irrefutable:
+  forall P : Prop,
+    ~~(P \/ ~P).
+Proof.
+  intros P.
+  unfold not.
+  apply double_neg.
