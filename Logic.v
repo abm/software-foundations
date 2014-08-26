@@ -405,4 +405,69 @@ Theorem excluded_middle_irrefutable:
 Proof.
   intros P.
   unfold not.
-  apply double_neg.
+  apply ex_falso_quodlibet.
+Abort.
+
+Notation "x <> y" := (~ (x = y)) : type_scope.
+
+Theorem not_false_then_true:
+  forall b : bool,
+    b <> false -> b = true.
+Proof.
+  intros b H.
+  destruct b.
+  Case "b = true".
+    reflexivity.
+  Case "b = false".
+    unfold not in H.
+    apply ex_falso_quodlibet.
+    apply H.
+    reflexivity.
+Qed.
+
+Theorem false_beq_nat:
+  forall n m : nat,
+    n <> m -> beq_nat n m = false.
+Proof.
+  intros n m H.
+  unfold not in H.
+  generalize dependent n.
+  induction m as [| m'].
+  Case "n = 0".
+    intros n H.
+    destruct n.
+      apply ex_falso_quodlibet.
+      apply H.
+      reflexivity.
+
+      simpl. reflexivity.
+  Case "n = S n'".
+    intros n H.
+    destruct n.
+      simpl.
+      reflexivity.
+
+      simpl.
+      apply IHm'.
+      intros I.
+      apply H.
+      apply eq_S.
+      apply I.
+Qed.
+
+Theorem beq_nat_false:
+  forall n m : nat,
+    beq_nat n m = false -> n <> m.
+Proof.
+  intros n m.
+  unfold not.
+  intros.
+  rewrite H0 in H.
+  induction m in H.
+    simpl in H.
+    inversion H.
+
+    simpl in H.
+    apply IHn0 in H.
+    inversion H.
+Qed.
